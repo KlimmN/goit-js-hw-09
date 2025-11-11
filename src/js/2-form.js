@@ -1,25 +1,49 @@
-const formData = {
-  email: '',
-  message: '',
-};
+const STORAGE_KEY = 'feedback-form-state';
 
-const form = document.querySelector('form');
-const localStorageKey = 'feedback-form-state';
+const form = document.querySelector('.feedback-form');
+const { email, message } = form.elements;
 
-form.addEventListener('input', e => {
-  localStorage.setItem(localStorageKey, e.target.value);
-});
+let formData = { email: '', message: '' };
 
-form.addEventListener('submit', e => {
+initFormFromStorage();
+
+form.addEventListener('input', onFormInput);
+form.addEventListener('submit', onFormSubmit);
+
+function initFormFromStorage() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return;
+
+  try {
+    const parsed = JSON.parse(saved) || {};
+    email.value = parsed.email || '';
+    message.value = parsed.message || '';
+    formData = { email: email.value, message: message.value };
+  } catch {}
+}
+
+function onFormInput(e) {
+  const { name, value } = e.target;
+  formData[name] = value;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+}
+
+function onFormSubmit(e) {
   e.preventDefault();
-  localStorage.removeItem(localStorageKey);
-  form.reset();
-});
 
-// console.log(localStorageKey);
+  const data = {
+    email: email.value.trim(),
+    message: message.value.trim(),
+  };
 
-// form.addEventListener('submit', evt => {
-//   evt.preventDefault();
-//   console.log(evt.target.elements.message.value);
-//   form.reset();
-// });
+  if (!data.email || !data.message) {
+    alert('Будь ласка, заповніть обидва поля.');
+    return;
+  }
+
+  console.log(data);
+
+  e.currentTarget.reset();
+  formData = { email: '', message: '' };
+  localStorage.removeItem(STORAGE_KEY);
+}
